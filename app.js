@@ -1,48 +1,68 @@
-const express = require('express');
-const bodyParser = require('body-parser');
+import express from 'express';
+import bodyParser from 'body-parser';
 
 const app = express();
-const port = process.env.PORT || 3000;
-
-// Middleware to parse JSON requests
 app.use(bodyParser.json());
 
-// POST method endpoint
-app.post('/api/data', (req, res) => {
-    // Get data from the request body
-    const {
-        user_id,
-        college_email_id,
-        college_roll_number,
-        numbers,
-        alphabets,
-    } = req.body;
+const PORT = 8000;
+app.get("/bhfl",(req,res)=>{
+    try{
+        return res.status(200).send({operation_code : 1})
+    }catch(err){
+        return res.status(500).json({ error: error.message });
+    }
+})
+app.post("/bhfl", (req, res) => {
+    try {
+        const { inputArray } = req.body;
+        const { numbers, alphabets } = separateNumbersAndAlphabets(inputArray);
+        const highest_alphabet = findMaxAlphabet(alphabets);
+        const response = {
+            is_success: true,
+            user_id: "Sivaramakrishnan_M_01082002",
+            email: "sm2482@srmist.edu.in",
+            roll_number: "RA2011029010002",
+            numbers: numbers,
+            alphabets: alphabets,
+            highest_alphabet: highest_alphabet
+        };
 
-    // Calculate the highest alphabet in the input array of alphabets
-    const highestAlphabet = Math.max(...alphabets.map((c) => c.charCodeAt(0)));
-
-    // Send the response
-    res.json({
-        status: 'Success',
-        user_id,
-        college_email_id,
-        college_roll_number,
-        numbers,
-        alphabets,
-        highest_alphabet: String.fromCharCode(highestAlphabet),
-    });
+        res.json(response);
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
 });
 
-// GET method endpoint
-app.get('/api/operation_code', (req, res) => {
-    // Generate an operation code (you can use any logic you want)
-    const operationCode = Math.random().toString(36).substr(2, 8);
+function separateNumbersAndAlphabets(inputArray) {
+    if (!Array.isArray(inputArray)) {
+        throw new Error("Input should be an array.");
+    }
 
-    // Send the operation code as the response
-    res.json({ operation_code: operationCode });
-});
+    const numbers = inputArray.filter(item => typeof item === 'number');
+    const alphabets = inputArray.filter(item => typeof item === 'string' && /^[A-Za-z]$/.test(item));
 
-// Start the Express server
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+    return { numbers, alphabets };
+}
+
+function findMaxAlphabet(alphabets) {
+    if (!Array.isArray(alphabets)) {
+        throw new Error("Input should be an array.");
+    }
+
+    let maxCharCode = 0;
+    let maxChar = '';
+
+    for (let i = 0; i < alphabets.length; i++) {
+        const charCode = alphabets[i].charCodeAt(0);
+        if (charCode > maxCharCode) {
+            maxCharCode = charCode;
+            maxChar = alphabets[i];
+        }
+    }
+
+    return maxChar;
+}
+
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
 });
